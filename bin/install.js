@@ -3939,6 +3939,47 @@ function copyWithPathReplacement(srcDir, destDir, pathPrefix, runtime, isCommand
 }
 
 /**
+ * Trae (local) project rules installer.
+ *
+ * Notes:
+ * - Trae project rules live in <project>/.trae/rules/ (see Trae docs).
+ * - We only install these for LOCAL installs to avoid overwriting global "User Rules"
+ *   managed by Trae UI.
+ * - Copy is RAW: do NOT run convertClaudeToTraeMarkdown here, because rules must
+ *   preserve both `/gsd:xxx` and `/gsd-xxx` spellings for aliasing.
+ */
+function installTraeProjectRules(srcRoot, targetDir) {
+  const rulesSrc = path.join(srcRoot, 'get-shit-done', 'templates', 'trae', 'rules');
+  if (!fs.existsSync(rulesSrc)) {
+    return { installed: false, count: 0, reason: 'rules_template_missing', rulesSrc };
+  }
+
+  const rulesDest = path.join(targetDir, 'rules');
+  fs.mkdirSync(rulesDest, { recursive: true });
+
+  let count = 0;
+  function recurse(currentSrc, currentDest) {
+    const entries = fs.readdirSync(currentSrc, { withFileTypes: true });
+    for (const entry of entries) {
+      const srcPath = path.join(currentSrc, entry.name);
+      const destPath = path.join(currentDest, entry.name);
+      if (entry.isDirectory()) {
+        fs.mkdirSync(destPath, { recursive: true });
+        recurse(srcPath, destPath);
+        continue;
+      }
+      // Only install markdown rules
+      if (!entry.name.endsWith('.md')) continue;
+      fs.copyFileSync(srcPath, destPath);
+      count += 1;
+    }
+  }
+
+  recurse(rulesSrc, rulesDest);
+  return { installed: true, count, rulesDest };
+}
+
+/**
  * Clean up orphaned files from previous GSD versions
  */
 function cleanupOrphanedFiles(configDir) {
@@ -4172,6 +4213,26 @@ function uninstall(isGlobal, runtime = 'claude') {
       if (skillCount > 0) {
         removedCount++;
         console.log(`  ${green}✓${reset} Removed ${skillCount} ${runtimeLabel} skills`);
+      }
+    }
+
+    // Trae local installs: remove only GSD-owned project rules (preserve user rules)
+    if (isTrae && !isGlobal) {
+      const rulesDir = path.join(targetDir, 'rules');
+      if (fs.existsSync(rulesDir)) {
+        const gsdRuleFiles = ['gsd-router.md', 'gsd-notes.md'];
+        let removedRules = 0;
+        for (const file of gsdRuleFiles) {
+          const p = path.join(rulesDir, file);
+          if (fs.existsSync(p)) {
+            fs.unlinkSync(p);
+            removedRules++;
+          }
+        }
+        if (removedRules > 0) {
+          removedCount++;
+          console.log(`  ${green}✓${reset} Removed ${removedRules} Trae project rule(s)`);
+        }
       }
     }
 
@@ -5179,6 +5240,20 @@ function install(isGlobal, runtime = 'claude') {
     } else {
       failures.push('skills/gsd-*');
     }
+
+    // Trae LOCAL installs: also install project rules to .trae/rules/
+    // (Trae global "User Rules" are managed by the IDE, not via filesystem)
+    if (!isGlobal) {
+      const rulesResult = installTraeProjectRules(src, targetDir);
+      if (rulesResult.installed && rulesResult.count > 0) {
+        const rulesLocation = rulesResult.rulesDest
+          ? rulesResult.rulesDest.replace(process.cwd(), '.')
+          : '.trae/rules';
+        console.log(`  ${green}✓${reset} Installed ${rulesResult.count} project rule(s) to ${rulesLocation}`);
+      } else {
+        failures.push('rules/*.md');
+      }
+    }
   } else if (isGemini) {
     const commandsDir = path.join(targetDir, 'commands');
     fs.mkdirSync(commandsDir, { recursive: true });
@@ -5882,8 +5957,11 @@ function finishInstall(settingsPath, settings, statuslineCommand, shouldInstallS
   if (runtime === 'windsurf') command = '/gsd-new-project';
   if (runtime === 'augment') command = '/gsd-new-project';
   if (runtime === 'trae') command = '/gsd-new-project';
+  const traeAliasNote = (isTrae && !isGlobal)
+    ? `\n  ${dim}Trae 项目规则已写入 .trae/rules/，你也可以用 /gsd:new-project（别名）触发。${reset}\n`
+    : '';
   console.log(`
-  ${green}Done!${reset} Open a blank directory in ${program} and run ${cyan}${command}${reset}.
+  ${green}Done!${reset} Open a blank directory in ${program} and run ${cyan}${command}${reset}.${traeAliasNote}
 
   ${cyan}Join the community:${reset} https://discord.gg/mYgfVNfA2r
 `);

@@ -52,6 +52,16 @@ function collectFiles(dir, extensions, results = []) {
 function isTestInput(filePath, line) {
   const rel = path.relative(ROOT, filePath).replace(/\\/g, '/');
 
+  // Trae project rules may deliberately document both spellings as aliases.
+  // These are not "stale" refs — they are UX compatibility notes.
+  if (rel === 'get-shit-done/templates/trae/rules/gsd-router.md') return true;
+  if (rel === 'README.md' && line.includes('`/gsd') && line.includes(':new-project`')) return true;
+  if (rel === 'README.zh-CN.md' && line.includes('`/gsd') && line.includes(':new-project`')) return true;
+  if (rel === 'bin/install.js' && (
+    (line.includes('`/gsd') && line.includes(':xxx`')) ||
+    (line.includes('/gsd') && line.includes(':new-project'))
+  )) return true;
+
   // SDK test files (.ts) that test sanitizer stripping of /gsd: patterns
   if (rel === 'sdk/src/prompt-sanitizer.test.ts') return true;
   if (rel === 'sdk/src/init-runner.test.ts') return true;
