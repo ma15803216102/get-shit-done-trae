@@ -1,9 +1,9 @@
 {
-  "name": "get-shit-done-cc",
+  "name": "get-shit-done-trae",
   "version": "1.34.2",
-  "description": "A meta-prompting, context engineering and spec-driven development system for Claude Code, OpenCode, Gemini and Codex by TÂCHES.",
+  "description": "A meta-prompting, context engineering and spec-driven development system with Trae compatibility (community fork).",
   "bin": {
-    "get-shit-done-cc": "bin/install.js"
+    "get-shit-done-trae": "bin/install.js"
   },
   "files": [
     "bin",
@@ -29,11 +29,11 @@
   "license": "MIT",
   "repository": {
     "type": "git",
-    "url": "git+https://github.com/gsd-build/get-shit-done.git"
+    "url": "git+https://github.com/YOUR_GITHUB_USERNAME/get-shit-done-trae.git"
   },
-  "homepage": "https://github.com/gsd-build/get-shit-done",
+  "homepage": "https://github.com/YOUR_GITHUB_USERNAME/get-shit-done-trae",
   "bugs": {
-    "url": "https://github.com/gsd-build/get-shit-done/issues"
+    "url": "https://github.com/YOUR_GITHUB_USERNAME/get-shit-done-trae/issues"
   },
   "engines": {
     "node": ">=22.0.0"
