@@ -185,6 +185,15 @@ describe('Trae local install/uninstall', () => {
     assert.ok(fs.existsSync(path.join(targetDir, 'get-shit-done', 'VERSION')));
     assert.ok(fs.existsSync(path.join(targetDir, 'agents')));
 
+    // Trae local install should also install project rules
+    const rulesFile = path.join(targetDir, 'rules', 'gsd-router.md');
+    assert.ok(fs.existsSync(rulesFile), rulesFile);
+    const rulesContent = fs.readFileSync(rulesFile, 'utf8');
+    assert.ok(rulesContent.includes('alwaysApply: true'), rulesContent);
+    // Preserve both spellings for aliasing (do NOT auto-convert to dash-only)
+    assert.ok(rulesContent.includes('/gsd:new-project'), rulesContent);
+    assert.ok(rulesContent.includes('/gsd-new-project'), rulesContent);
+
     const manifest = writeManifest(targetDir, 'trae');
     assert.ok(Object.keys(manifest.files).some(file => file.startsWith('skills/gsd-help/')), manifest);
 
@@ -192,6 +201,29 @@ describe('Trae local install/uninstall', () => {
 
     assert.ok(!fs.existsSync(path.join(targetDir, 'skills', 'gsd-help')), 'Trae skill directory removed');
     assert.ok(!fs.existsSync(path.join(targetDir, 'get-shit-done')), 'get-shit-done removed');
+    assert.ok(!fs.existsSync(rulesFile), 'GSD Trae project rule removed');
+  });
+
+  test('does not install project rules for Trae global installs', () => {
+    const originalTraeConfigDir = process.env.TRAE_CONFIG_DIR;
+    const globalDir = path.join(tmpDir, 'trae-global');
+    process.env.TRAE_CONFIG_DIR = globalDir;
+
+    install(true, 'trae');
+
+    const targetDir = path.join(globalDir); // ~/.trae replacement in tests
+    const rulesFile = path.join(targetDir, 'rules', 'gsd-router.md');
+    assert.ok(!fs.existsSync(rulesFile), 'Trae global install should not write project rules');
+
+    // Cleanup: uninstall should still work (and should not touch rules/)
+    uninstall(true, 'trae');
+
+    // Restore env
+    if (originalTraeConfigDir !== undefined) {
+      process.env.TRAE_CONFIG_DIR = originalTraeConfigDir;
+    } else {
+      delete process.env.TRAE_CONFIG_DIR;
+    }
   });
 });
 

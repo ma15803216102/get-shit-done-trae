@@ -157,6 +157,9 @@ npx get-shit-done-cc --augment --local      # 安装到 ./.augment/
 npx get-shit-done-cc --trae --global     # 安装到 ~/.trae/
 npx get-shit-done-cc --trae --local      # 安装到 ./.trae/
 
+> Trae 说明（local 安装）：会把项目规则写入 `./.trae/rules/`（包含命令别名与路由）。
+> 你既可以用 `/gsd-new-project`（Trae skill 名称），也可以用 `/gsd:new-project`（别名）触发。
+
 # Cline
 npx get-shit-done-cc --cline --global       # 安装到 ~/.cline/
 npx get-shit-done-cc --cline --local        # 安装到 ./.clinerules

@@ -175,6 +175,9 @@ npx get-shit-done-cc --augment --local      # Install to ./.augment/
 npx get-shit-done-cc --trae --global        # Install to ~/.trae/
 npx get-shit-done-cc --trae --local         # Install to ./.trae/
 
+> Trae note (local install): installs project rules to `./.trae/rules/` (command aliases + routing).
+> You can run either `/gsd-new-project` (Trae skill name) or `/gsd:new-project` (alias).
+
 # Cline
 npx get-shit-done-cc --cline --global       # Install to ~/.cline/
 npx get-shit-done-cc --cline --local        # Install to ./.clinerules
